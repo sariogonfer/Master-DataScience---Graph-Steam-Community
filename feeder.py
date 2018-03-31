@@ -100,8 +100,8 @@ class DataSaver:
             print('{},{}'.format(u1, u2), file=self.f_user_user_rels)
 
     def save_user_game_rels(self, relations):
-        for u, g in relations:
-            print('{},̣{}'.format(u, g), file=self.f_user_game_rels)
+        for u, g, t in relations:
+            print('{},̣{},{}'.format(u, g, t), file=self.f_user_game_rels)
 
 
 class SteamUser:
@@ -137,16 +137,21 @@ class SteamUser:
 
     @property
     def owned_games_ids(self):
-        return [g['appid'] for g in self.owned_games['response'].get('games',
-                                                                     [])]
+        return [g['appid'] for g in self.owned_games['response'] \
+                .get('games', [])]
+
+    @property
+    def owned_games_playtime(self):
+        return [(g['appid'], g['playtime_forever']) for g in \
+                self.owned_games['response'].get('games', [])]
 
     def get_friend_rels(self, exclude=[]):
         for friend_id in [f for f in self.friend_ids if not f in exclude]:
             yield self._steamid, friend_id
 
     def get_game_rels(self):
-        for game_id in self.owned_games_ids:
-            yield self._steamid, game_id
+        for game in self.owned_games_playtime:
+            yield self._steamid, game[0], game[1]
 
     def get_owned_games_info(self, exclude=[]):
         return [g for g in self.owned_games['response'].get('games', []) \
@@ -192,7 +197,8 @@ def harvest_info(seed_steamid):
                     except Full:
                         break
                 time.sleep(0.1)
-            except:
+            except Exception as e:
+                print(e)
                 print('Failed. ID: {}'.format(steamid))
 
 if __name__ == "__main__":
