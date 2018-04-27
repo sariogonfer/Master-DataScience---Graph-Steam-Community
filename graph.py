@@ -1,7 +1,15 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import json
-import csv 
+import csv
+import sys
+
+def special_print(text, print_ln = True):
+    if (print_ln):
+        print(text)
+    else:
+        sys.stdout.write(text)
+        sys.stdout.flush()
 
 def get_element(json, element, type='string'):
     if (type == 'string'):
@@ -46,7 +54,8 @@ def load_user_relations(graph, path='./output/', debug=False):
         
         for relation in csv_reader:
             if (relation[0] in graph and relation[1] in graph):
-                graph.add_edge(relation[0], relation[1], type='friend')
+                graph.add_edge(relation[0], relation[1],
+                    type='is_friend')
             else:
                 if (debug):
                     if (not(relation[0] in graph)):
@@ -83,7 +92,10 @@ def load_game_relations(graph, path='./output/', debug=False):
         
         for relation in csv_reader:
             if (relation[0] in graph and relation[1] in graph):
-                graph.add_edge(relation[0], relation[1], type='play')
+                #0: origen; 1: destino; 2: horas jugadas
+                graph.add_edge(relation[0], relation[1],
+                    type='plays',
+                    weight=relation[2])
             else:
                 if (debug):
                     if (not(relation[0] in graph)):
@@ -95,14 +107,19 @@ def load_game_relations(graph, path='./output/', debug=False):
 
 if __name__ == "__main__":
     g = nx.Graph()
-    print ("Leyendo usuarios...")
+    import sys
+    special_print("Leyendo usuarios...", print_ln=False)
     g = load_users(g)
-    print ("Leyendo relaciones entre usuarios...")
+    print("OK")
+    special_print("Leyendo relaciones entre usuarios...", print_ln=False)
     g = load_user_relations(g)
-    print ("Leyendo Juegos...")
+    print("OK")
+    special_print("Leyendo Juegos...", print_ln=False)
     g = load_games(g)
-    print ("Leyendo relaciones entre juegos...")
+    print("OK")
+    special_print("Leyendo relaciones entre usuarios y juegos...", print_ln=False)
     g = load_game_relations(g, debug = False)
+    print("OK")
     
     
     print(nx.info(g))
@@ -116,6 +133,7 @@ if __name__ == "__main__":
     #Subgrafo de usuarios
     user_subgraph = g.subgraph([i for i in g.nodes() if (g.node[i]['type'] == 'user')])
     game_subgraph = g.subgraph([i for i in g.nodes() if (g.node[i]['type'] == 'game')])
+    
     
     print(nx.info(user_subgraph))
     print(nx.info(game_subgraph))
