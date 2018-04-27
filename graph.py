@@ -1,4 +1,5 @@
 import networkx as nx
+import matplotlib.pyplot as plt
 import json
 import csv 
 
@@ -93,12 +94,40 @@ def load_game_relations(graph, path='./output/', debug=False):
     return graph
 
 if __name__ == "__main__":
-       
     g = nx.Graph()
-    g = load_users(g, debug=True)
+    print ("Leyendo usuarios...")
+    g = load_users(g)
+    print ("Leyendo relaciones entre usuarios...")
     g = load_user_relations(g)
+    print ("Leyendo Juegos...")
     g = load_games(g)
+    print ("Leyendo relaciones entre juegos...")
     g = load_game_relations(g)
     
-
+    
+    print(nx.info(g))
+    
+    #Devuelve un diccionario con los degrees
+    nx.degree(g) 
+    
+    #nx.draw(g)
+    #plt.show()
+    
+    #Subgrafo de usuarios
+    user_subgraph = g.subgraph([i for i in g.nodes() if (g.node[i]['type'] == 'user')])
+    
+    print(nx.info(user_subgraph))
+    #nx.betweenness_centrality(user_subgraph)
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
