@@ -46,7 +46,7 @@ def load_user_relations(graph, path='./output/', debug=False):
         
         for relation in csv_reader:
             if (relation[0] in graph and relation[1] in graph):
-                graph.add_edge(relation[0], relation[1])
+                graph.add_edge(relation[0], relation[1], type='friend')
             else:
                 if (debug):
                     if (not(relation[0] in graph)):
@@ -63,7 +63,7 @@ def load_games(graph, path='./output/', debug=False):
                 game = json.loads(game_f)
                 
                 #Creating a new node
-                graph.add_node(game['appid'],
+                graph.add_node(str(game['appid']),
                     type                        ='game',
                     name                        = get_element(game, 'name'),
                     img_icon_url                = get_element(game, 'img_icon_url'),
@@ -83,7 +83,7 @@ def load_game_relations(graph, path='./output/', debug=False):
         
         for relation in csv_reader:
             if (relation[0] in graph and relation[1] in graph):
-                graph.add_edge(relation[0], relation[1])
+                graph.add_edge(relation[0], relation[1], type='play')
             else:
                 if (debug):
                     if (not(relation[0] in graph)):
@@ -102,21 +102,23 @@ if __name__ == "__main__":
     print ("Leyendo Juegos...")
     g = load_games(g)
     print ("Leyendo relaciones entre juegos...")
-    g = load_game_relations(g)
+    g = load_game_relations(g, debug = False)
     
     
     print(nx.info(g))
     
     #Devuelve un diccionario con los degrees
-    nx.degree(g) 
+    nx.degree(g)
     
     #nx.draw(g)
     #plt.show()
     
     #Subgrafo de usuarios
     user_subgraph = g.subgraph([i for i in g.nodes() if (g.node[i]['type'] == 'user')])
+    game_subgraph = g.subgraph([i for i in g.nodes() if (g.node[i]['type'] == 'game')])
     
     print(nx.info(user_subgraph))
+    print(nx.info(game_subgraph))
     #nx.betweenness_centrality(user_subgraph)
     
     
