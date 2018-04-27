@@ -134,7 +134,7 @@ if __name__ == "__main__":
     user_subgraph = g.subgraph([i for i in g.nodes() if (g.node[i]['type'] == 'user')])
     game_subgraph = g.subgraph([i for i in g.nodes() if (g.node[i]['type'] == 'game')])
     
-    
+     
     print(nx.info(user_subgraph))
     print(nx.info(game_subgraph))
     #nx.betweenness_centrality(user_subgraph)
