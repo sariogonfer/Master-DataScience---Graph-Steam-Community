@@ -241,12 +241,12 @@ def dump_nodes_into_file(g, type, file, n):
 if __name__ == "__main__":
 
     print("#####################################################################################################################")
-    print("# LECTURA DE DATOS")
+    print("                                                  LECTURA DE DATOS")
     print("#####################################################################################################################")
     g = load_graph()
     
     print("#####################################################################################################################")
-    print("CARACTERÍSTICAS DEL GRAFO")
+    print("                                             CARACTERÍSTICAS DEL GRAFO")
     print("#####################################################################################################################")
     print_info(g)
     
@@ -259,7 +259,7 @@ if __name__ == "__main__":
 
 
     print("#####################################################################################################################")
-    print("30 JUGADORES QUE MÁS HAN JUGADO")
+    print("                                             30 JUGADORES QUE MÁS HAN JUGADO")
     print("#####################################################################################################################")
     
     # Almacenamos el grado de todos los nodos, tanto usuarios como juegos, como atributo.
@@ -279,7 +279,7 @@ if __name__ == "__main__":
 
     
     print("#####################################################################################################################")
-    print("30 JUGADORES QUE MÁS JUEGOS POSEEN")
+    print("                                             30 JUGADORES QUE MÁS JUEGOS POSEEN")
     print("#####################################################################################################################")
     
     # Obtenemos el grado de los usuarios y juegos, sin tener en cuenta los minutos jugados, sino simplemente los enlaces
@@ -295,7 +295,7 @@ if __name__ == "__main__":
 
 
     print("#####################################################################################################################")
-    print("30 JUGADORES CON MÁS AMIGOS")
+    print("                                               30 JUGADORES CON MÁS AMIGOS")
     print("#####################################################################################################################")
     
     # Obtenemos el grado de los usuarios en el subgrafo user_sg. Ese subgrafo únicamente contiene usuarios, por lo que 
@@ -310,11 +310,15 @@ if __name__ == "__main__":
         
     
     print("#####################################################################################################################")
-    print("30 JUGADORES MÁS IMPORTANTES (teniendo en cuenta el tiempo de juego y para todas las jugadas (utilizando Pagerank))")
+    print("                                             30 JUGADORES MÁS IMPORTANTES")
+    print("                 (teniendo en cuenta el tiempo de juego y para todas las jugadas (utilizando Pagerank))")
     print("#####################################################################################################################")
+    special_print("Ejecutando Pagerank. Por favor, espere...", print_ln=False)
     after = datetime.datetime.now()
     nx.set_node_attributes(g, dict(nx.pagerank(games_user_sg, weight = 'played_mins')), 'pagerank_centrality')
+    print("OK")
     print("Tiempo de ejecución Pagerank: %.2f segundos" % (datetime.datetime.now() - after).total_seconds())
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     
     users_sorted_pagerank = sorted([node for node in g.nodes(data=True) if node[1]['type'] == 'user' and 'pagerank_centrality' in node[1]],
         key=lambda t: t[1]['pagerank_centrality'], reverse=True)[:30]
@@ -324,7 +328,8 @@ if __name__ == "__main__":
     
     
     print("#####################################################################################################################")
-    print("30 JUEGOS MÁS IMPORTANTES (teniendo en cuenta el tiempo de juego y para todas las jugadas (utilizando Pagerank))")
+    print("                                             30 JUEGOS MÁS IMPORTANTES")
+    print("                 (teniendo en cuenta el tiempo de juego y para todas las jugadas (utilizando Pagerank))")
     print("#####################################################################################################################")
         
     games_sorted_pagerank = sorted([node for node in g.nodes(data=True) if node[1]['type'] == 'game' and 'pagerank_centrality' in node[1]],
@@ -335,18 +340,21 @@ if __name__ == "__main__":
     
     
     print("#####################################################################################################################")
-    print("30 JUGADORES MÁS IMPORTANTES (teniendo en cuenta el tiempo de juego y para jugadas > 5 minutos (utilizando Pagerank))")
+    print("                                             30 JUGADORES MÁS IMPORTANTES")
+    print("                 (teniendo en cuenta el tiempo de juego y para jugadas > 5 minutos (utilizando Pagerank))")
     print("#####################################################################################################################")
- 
     # Creamos un subgrafo a partir de los nodos que tengan aristas/uniones de tipo 'plays' y que el atributo played_mins sea superior a 5.
     # Esto generará un subgrafo con los juegos y usuarios que hayan jugado a dichos juegos más de 5 minutos (o el valor de bottom_limit)
     bottom_limit = 5
     games_user_filtered_sg = g.edge_subgraph([(p, g) for (p, g, data) in g.edges(data=True) if (data['type'] == 'plays'and data['played_mins'] > bottom_limit)])
 
+    special_print("Ejecutando Pagerank. Por favor, espere...", print_ln=False)
     after = datetime.datetime.now()    
     # Almacenamos dicha centralidad en el atributo pagerank_filtered_centrality
     nx.set_node_attributes(g, dict(nx.pagerank(games_user_filtered_sg, weight = 'played_mins')), 'pagerank_filtered_centrality')
+    print("OK")
     print("Tiempo de ejecución Pagerank: %.2f segundos" % (datetime.datetime.now() - after).total_seconds())
+    print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
     
     users_sorted_filtered_pagerank = sorted([node for node in g.nodes(data=True) if node[1]['type'] == 'user' and 'pagerank_filtered_centrality' in node[1]],
         key=lambda t: t[1]['pagerank_filtered_centrality'], reverse=True)[:30]
@@ -356,7 +364,8 @@ if __name__ == "__main__":
     
     
     print("#####################################################################################################################")
-    print("30 JUEGOS MÁS IMPORTANTES (teniendo en cuenta el tiempo de juego y para jugadas > 5 minutos (utilizando Pagerank))")
+    print("                                             30 JUEGOS MÁS IMPORTANTES")
+    print("                 (teniendo en cuenta el tiempo de juego y para jugadas > 5 minutos (utilizando Pagerank))")
     print("#####################################################################################################################")
         
     games_sorted_filtered_pagerank = sorted([node for node in g.nodes(data=True) if node[1]['type'] == 'game' and 'pagerank_filtered_centrality' in node[1]],
@@ -367,7 +376,7 @@ if __name__ == "__main__":
     
 
     print("#####################################################################################################################")
-    print("SUBGRAFOS CON 1.000 USUARIOS QUE MÁS HAN JUGADO Y 1.000 USUARIOS QUE MENOS HAN JUGADO")
+    print("                SUBGRAFOS CON 1.000 USUARIOS QUE MÁS HAN JUGADO Y 1.000 USUARIOS QUE MENOS HAN JUGADO")
     print("#####################################################################################################################")
 
     # Obtenemos los 1000 usuarios que más han jugado de toda la red. En el atributo 'played_total_mins' de los usuarios (type == 'user') hemos
@@ -390,7 +399,7 @@ if __name__ == "__main__":
 
     
     print("#####################################################################################################################")
-    print("VOLCADO DE INFORMACIÓN A FICHEROS PARA SU VISUALIZACION")
+    print("                                 VOLCADO DE INFORMACIÓN A FICHEROS PARA SU VISUALIZACION")
     print("#####################################################################################################################")
     special_print("Volcando 200 juegos más importantes.....", print_ln=False)
     dump_nodes_into_file(g, 'game', '200_main_games.json', 200)
