@@ -1,0 +1,23 @@
+  <!DOCTYPE html>
+    <head>
+          <meta charset="utf-8" />
+</head>
+<div align='center' id="d3_selectable_force_directed_graph" style="width: 100%; height: 100%; margin: auto; margin-bottom: 12px">
+    <svg />
+</div>
+
+<link rel='stylesheet' href='/static/css/graph.css'>
+<script src="https://d3js.org/d3.v4.js"></script>
+<script src="/static/js/graph.js"></script>
+
+<script>
+    var svg = d3.select('#d3_selectable_force_directed_graph');
+
+    d3.json('node/76561197960278042', function(error, graph) {
+        if (!error) {
+            createV4SelectableForceDirectedGraph(svg, graph);
+        } else {
+            console.error(error);
+        }
+    });
+</script>
