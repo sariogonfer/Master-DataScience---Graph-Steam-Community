@@ -59,9 +59,9 @@ def genre_top_games(g):
 @app.route('/genres/')
 def genres():
     from collections import Counter
-    c = Counter([genre for id_, data in G.nodes(data=True)
+    c = Counter({genre: G.node[id_]['played_total_mins'] for id_, data in G.nodes(data=True)
                  if data['type'] == 'game' and 'genres' in data
-                 for genre in G.node[id_]['genres']])
+                 for genre in G.node[id_]['genres']})
     return json.dumps({'name': 'genres', 'children': [
         {'name': k, 'value': v,
          'children': [{
