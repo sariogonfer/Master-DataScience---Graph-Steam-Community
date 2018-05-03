@@ -125,6 +125,7 @@ def load_user_relations(graph, path='./output/', debug=False):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def load_games(graph, path='./output/', debug=False):
     with open(path + 'games.json', 'r') as f:
+
         for game_f in f:
             try:
                 game = json.loads(game_f)
@@ -139,7 +140,8 @@ def load_games(graph, path='./output/', debug=False):
                     name                        = get_element(game, 'name'),
                     img_icon_url                = get_element(game, 'img_icon_url'),
                     img_logo_url                = get_element(game, 'img_logo_url'),
-                    has_community_visible_stats = get_element(game, 'has_community_visible_stats', type='boolean'))
+                    genres                      = ['Action', 'Casual'],
+                    has_community_visible_stats = get_element(game, 'has_community_visible_stats', type='boolean')) 
                     
             except ValueError:
                 if (debug):
@@ -236,8 +238,62 @@ def dump_nodes_into_file(g, type, file, n):
                 sorted([node for node in g.nodes(data=True) if node[1]['type'] == type and 'pagerank_centrality' in node[1]],
                     # Ordenacion por atributo 'pagerank_centrality'
                     key=lambda t: t[1]['pagerank_centrality'], reverse=True)[:n]))))
-       
 
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Volcado de grafo a fichero json para la visualización de circulos con zoom
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ARGUMENTOS
+# g:            Grafo
+# type:         Tipo de nodo que se desea volcar (user/game)
+# file:         Nombre del fichero
+# n:            Numero de nodos que se quiere volcar
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+def dump_circles_nodes_into_file(g, type, file, n):
+    #Escritura de subgrafo de juegos a fichero
+    games = {}
+    
+    #Recuperación de los n nodos más importantes
+    top_nodes = sorted([node for node in g.nodes(data=True) if node[1]['type'] == type and 'pagerank_centrality' in node[1]],
+                    # Ordenacion por atributo 'pagerank_centrality'
+                    key=lambda t: t[1]['pagerank_centrality'], reverse=True)[:n]
+    
+    #Almacenamos la información en la variable games con el genero, nombre del juego y minutos jugados
+    for node in top_nodes:
+        if (node[1]['type'] == type):
+            for genre in node[1]['genres']:
+                if (genre not in games):
+                    games[genre] = {}
+                games[genre][node[1]['name']] = node[1]['played_total_mins']   
+
+    #Volcado en el formato que espera el html de d3js
+    output_lst = []
+
+    for genre in games:
+        genre_dict = {}
+        genre_dict['name'] = genre
+        genre_dict['children'] = []
+        
+        for game in games[genre]:
+            game_dict = {}
+            game_dict['name'] = game
+            game_dict['size'] = games[genre][game]
+            genre_dict['children'].append(game_dict)
+        
+        output_lst.append(genre_dict)
+    
+    output = {}
+    output['name'] = '200_games'
+    output['children'] = output_lst
+    
+    open(file, 'w').write(
+        json.dumps(output))   
+    
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Programa principal. Main
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 if __name__ == "__main__":
 
     print("#####################################################################################################################")
@@ -402,10 +458,11 @@ if __name__ == "__main__":
     print("                                 VOLCADO DE INFORMACIÓN A FICHEROS PARA SU VISUALIZACION")
     print("#####################################################################################################################")
     special_print("Volcando 200 juegos más importantes.....", print_ln=False)
-    dump_nodes_into_file(g, 'game', '200_main_games.json', 200)
+    dump_nodes_into_file(g, 'game', 'visualizacion/200_main_games.json', 200)
+    dump_circles_nodes_into_file(g, 'game', 'visualizacion/200_main_games_bubble_zoom.json', 200)
     print("OK")
     special_print("Volcando 200 usuarios más importantes...", print_ln=False)
-    dump_nodes_into_file(g, 'user', '200_main_users.json', 200)
+    dump_nodes_into_file(g, 'user', 'visualizacion/200_main_users.json', 200)
     print("OK")
     
        
