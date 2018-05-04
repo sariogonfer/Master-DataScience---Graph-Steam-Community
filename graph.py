@@ -7,6 +7,16 @@ import operator
 import networkx.algorithms.community.label_propagation as lp
 from networkx.readwrite import json_graph
 import datetime
+import pycountry
+
+def get_country_code(name):
+    try:
+        return pycountry.countries.get(alpha_2=name).common_name
+    except:
+        try:
+            return pycountry.countries.get(alpha_2=name).name
+        except:
+            return 'Unknown'
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Función para imprimir texto con \n o sin \n al final de la linea
@@ -60,6 +70,8 @@ def load_users(graph, path='./output/', debug=False):
                 user_json = json.loads(user)
                 player = user_json['response']['players'][0]
                 
+                loccountry = get_element(player, 'loccountrycode')
+                
                 #Creacion de nodo
                 graph.add_node(
                     # Id
@@ -68,7 +80,8 @@ def load_users(graph, path='./output/', debug=False):
                     type            ='user',       
                     profileurl      = get_element(player, 'profileurl'),
                     realname        = get_element(player, 'realname'),
-                    loccountrycode  = get_element(player, 'loccountrycode'),
+                    loccountrycode  = loccountry,
+                    country         = get_country_code(loccountry),
                     avatar          = get_element(player, 'avatar'),
                     avatar_medium   = get_element(player, 'avatarmedium'),
                     avatar_full     = get_element(player, 'avatarfull'),
@@ -472,7 +485,7 @@ if __name__ == "__main__":
     print("OK")
     special_print("Volcando 200 usuarios más importantes...", print_ln=False)
     dump_nodes_into_file(g, 'user', 'visualizacion/200_main_users.json', 200)
-    dump_circles_nodes_into_file(g, 'user', 'visualizacion/200_main_users_bubble_zoom.json', 200, 'loccountrycode', is_list = False)
+    dump_circles_nodes_into_file(g, 'user', 'visualizacion/200_main_users_bubble_zoom.json', 200, 'country', is_list = False)
     print("OK")
     
        
