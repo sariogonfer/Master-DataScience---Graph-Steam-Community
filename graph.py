@@ -251,8 +251,9 @@ def dump_nodes_into_file(g, type, file, n):
 # type:         Tipo de nodo que se desea volcar (user/game)
 # file:         Nombre del fichero
 # n:            Numero de nodos que se quiere volcar
+# attribute:    Atributo por el que se agrupará
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def dump_circles_nodes_into_file(g, type, file, n):
+def dump_circles_nodes_into_file(g, type, file, n, attribute, is_list = True):
     #Escritura de subgrafo de juegos a fichero
     games = {}
     
@@ -264,10 +265,15 @@ def dump_circles_nodes_into_file(g, type, file, n):
     #Almacenamos la información en la variable games con el genero, nombre del juego y minutos jugados
     for node in top_nodes:
         if (node[1]['type'] == type):
-            for genre in node[1]['genres']:
-                if (genre not in games):
-                    games[genre] = {}
-                games[genre][node[1]['name']] = node[1]['played_total_mins']   
+            if (is_list):
+                for attr in node[1][attribute]:
+                    if (attr not in games):
+                        games[attr] = {}
+                    games[attr][node[1]['name']] = node[1]['played_total_mins']
+            else:
+                if (node[1][attribute] not in games):
+                    games[node[1][attribute]] = {}
+                games[node[1][attribute]][node[1]['name']] = node[1]['played_total_mins']
 
     #Volcado en el formato que espera el html de d3js
     output_lst = []
@@ -286,11 +292,11 @@ def dump_circles_nodes_into_file(g, type, file, n):
         output_lst.append(genre_dict)
     
     output = {}
-    output['name'] = '200_games'
+    output['name'] = '200'
     output['children'] = output_lst
     
     open(file, 'w').write(
-        json.dumps(output))   
+        json.dumps(output))
     
 
 
@@ -462,10 +468,11 @@ if __name__ == "__main__":
     print("#####################################################################################################################")
     special_print("Volcando 200 juegos más importantes.....", print_ln=False)
     dump_nodes_into_file(g, 'game', 'visualizacion/200_main_games.json', 200)
-    dump_circles_nodes_into_file(g, 'game', 'visualizacion/200_main_games_bubble_zoom.json', 200)
+    dump_circles_nodes_into_file(g, 'game', 'visualizacion/200_main_games_bubble_zoom.json', 200, 'genres')
     print("OK")
     special_print("Volcando 200 usuarios más importantes...", print_ln=False)
     dump_nodes_into_file(g, 'user', 'visualizacion/200_main_users.json', 200)
+    dump_circles_nodes_into_file(g, 'user', 'visualizacion/200_main_users_bubble_zoom.json', 200, 'loccountrycode', is_list = False)
     print("OK")
     
        
