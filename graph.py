@@ -477,18 +477,19 @@ if __name__ == "__main__":
     # El subgrafo contendrá los 1000 usuarios que menos han jugado y los juegos a los que han jugado.
     bottom_users_sg = g.edge_subgraph([(a, b) for (a, b, data) in g.edges([user_id for (user_id, attrs) in bottom_users], data=True) if (data['type'] == 'plays')])
 
-    output_dir = "./server/static/data"
+    static_pages_dir = "./StaticPages"
+    server_data_dir = "./InteractiveServer/static/data"
 
     print("#####################################################################################################################")
     print("                                 VOLCADO DE INFORMACIÓN A FICHEROS PARA SU VISUALIZACION")
     print("#####################################################################################################################")
     special_print("Volcando 200 juegos más importantes.....", print_ln=False)
-    dump_circles_nodes_into_file(g, 'game', os.path.join(output_dir, '200_main_games_bubble_zoom.json'), 200, 'genres')
+    dump_circles_nodes_into_file(g, 'game', os.path.join(static_pages_dir, '200_main_games_bubble_zoom.json'), 200, 'genres')
     print("OK")
     special_print("Volcando 200 usuarios más importantes...", print_ln=False)
-    dump_circles_nodes_into_file(g, 'user', os.path.join(output_dir, '200_main_users_bubble_zoom.json'), 200, 'country', is_list = False)
+    dump_circles_nodes_into_file(g, 'user', os.path.join(static_pages_dir, '200_main_users_bubble_zoom.json'), 200, 'country', is_list = False)
     print("OK")
     special_print("Exportando el grafo como JSON", print_ln=False)
-    with open(os.path.join(output_dir, 'graph.json'), 'w') as f_:
+    with open(os.path.join(server_data_dir, 'graph.json'), 'w') as f_:
         f_.write(json.dumps(nx.node_link_data(g)))
     print("OK")

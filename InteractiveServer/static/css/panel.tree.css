@@ -1,0 +1,106 @@
+
+#chart {
+  width: 900px;
+  height: 600px;
+  background: #1b2938;
+}
+
+text {
+  fill: #66c0f4;
+  font-size: 20px;
+  text-anchor="middle"
+  pointer-events: none;
+}
+
+.grandparent text {
+  font-size: 25px;
+  font-weight: bold;
+}
+
+rect {
+  stroke: #59616d;
+}
+
+.children rect.parent, .grandparent rect {
+  stroke: #171a22;
+  stroke-width: 4px;
+}
+rect {
+  stroke-width: 1px;
+}
+rect.label {
+  stroke: none;
+}
+
+.children rect.parent,
+.grandparent rect {
+  cursor: pointer;
+}
+
+rect.parent:hover {
+  fill: #66c0f4;
+  fill-opacity: 0.3 !important;
+}
+
+.children rect.parent {
+  fill-opacity: 0;
+}
+
+.modal-dialog {
+  color: #66c0f4;
+  background-size:     cover;
+  background-repeat:   no-repeat;
+  background-position: center center;
+}
+
+#centrality-selector {
+}select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  -ms-appearance: none;
+  appearance: none;
+  outline: 0;
+  box-shadow: none;
+  border: 0 !important;
+  background: #2c3e50;
+  background-image: none;
+}
+/* Custom Select */
+.select {
+  position: fixed;
+  display: block;
+  width: 20em;
+  height: 3em;
+  line-height: 3;
+  background: #2c3e50;
+  overflow: hidden;
+  border-radius: .25em;
+}
+select {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0 0 0 .5em;
+  color: #fff;
+  cursor: pointer;
+}
+select::-ms-expand {
+  display: none;
+}
+/* Arrow */
+.select::after {
+  content: '\25BC';
+  position: fixed;
+  padding: 0 1em;
+  background: #34495e;
+  pointer-events: none;
+}
+/* Transition */
+.select:hover::after {
+  color: #f39c12;
+}
+.select::after {
+  -webkit-transition: .25s all ease;
+  -o-transition: .25s all ease;
+  transition: .25s all ease;
+}

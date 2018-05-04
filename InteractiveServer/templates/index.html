@@ -3,6 +3,8 @@
 <meta charset="utf-8">
 <head>
 <title>Zoomable Treemaps</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
   <link rel="stylesheet" href="/static/css/directed.force.css">
   <link rel="stylesheet" href="/static/css/index.css">
   <link rel="stylesheet" href="/static/css/panel.tree.css">
@@ -13,22 +15,35 @@
 
 </body>
 
-<script id="info-template" type="x-tmpl-mustache">
+<script id="info-game-template" type="x-tmpl-mustache">
   {% raw %}
-  <div>Name: {{ name }}</div>
-  <div>Type: {{ type }}</div>
+  <div class="modal-content" style="background-image: url({{ background }})">
+  <div class="modal-header">
+    <button type="button" class="close" data-dismiss="modal">&times;</button>
+    <h4 class="modal-title">{{ name }}</h4>
+  </div>
+  <div class="modal-body">
+    <p>Type: {{ type }}</p>
+    <p>Free: {{ is_free }}</p>
+    <p>Homepage: <a>{{ website }}</a></p>
+    {{{ detailed_description }}}
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+  </div>
+  </div>
   {% endraw %}
 </script>
 
 <div class="reveal">
   <div class="slides">
     <section>
-      <h1>Panel de generos.</h1>
+      <h2>Panel de géneros.</h2>
       <p>
         Este panel muestra la distribución de los diferentes generos según el tiempo jugado.
         Al hacer click sobre un genero, se muestran los 20 juegos más populares.
         Al pasar el raton sobre un juego, se muestra el total de minutos jugados.
-        Al hacer click sobre un juego, se muestra información sobre él
+        Al hacer click sobre un juego, se muestra información sobre él.
       </p>
     </section>
 
@@ -38,7 +53,7 @@
     </section>
 
     <section>
-      <h1>Grafo de usuarios amigos de mis amigos.</h1>
+      <h2>Grafo de usuarios amigos de mis amigos.</h2>
       <p>
         Este grafo muestra los amigos de los amigos de un usuario.
         Al hacer click sobre un nodo, realiza los cálculos al vuelo, así que puede tardar unos segundos en cargar los datos. Be Patient.
@@ -46,7 +61,7 @@
     </section>
 
     <section>
-      <select id="centrality-selector" style='position:fixed;' onchange="selectCentrality()">
+      <select id="centrality-selector" style='' onchange="selectCentrality()">
         <option value="pagerank">Pagerank</option>
         <option value="degree_centrality">Degree</option>
         <option value="betweenness">Closeness</option>
@@ -58,10 +73,19 @@
     </section>
   </div>
 </div>
+<div class="modal fade" id="info-game-modal" role="dialog">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+
+    </div>
+  </div>
+</div>
 <script src="/static/js/d3.v4.js" charset="utf-8"></script>
 <script>
   d3v4 = d3;
 </script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 <script src="/static/js/d3.v3.min.js" charset="utf-8"></script>
 <script src="/static/js/mustache.js" charset="utf-8"></script>
 <script src="/static/js/panel.tree.js" charset="utf-8"></script>
@@ -82,7 +106,7 @@
   function selectCentrality() {
       var x = document.getElementById("centrality-selector").value;
       svgDirectedForce.selectAll('circle').transition().duration(500)
-        .attr('r', function(d){ return Math.sqrt((d[x] || 0.01)*50);});;
+        .attr('r', function(d){ return Math.sqrt((d[x] || 0.01) * 50 );});;
   }
 </script>
 <script>
