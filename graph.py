@@ -28,7 +28,7 @@ def special_print(text, print_ln = True):
 # ARGUMENTOS
 # json:         Fichero json
 # element:      Atributo a obtener
-# type:         Tipo de dato (string/boolean)
+# type:         Tipo de dato (string/boolean/list)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # RETORNO
 # text:        Elemento buscado
@@ -38,6 +38,8 @@ def get_element(json, element, type='string'):
         return json[element] if element in json else ''
     elif (type == 'boolean'):
         return json[element] if element in json else False
+    elif (type == 'list'):
+        return json[element] if element in json else []
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Lectura y almacenamiento de información de usuarios al grafo pasado por argumento
@@ -125,6 +127,7 @@ def load_user_relations(graph, path='./output/', debug=False):
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def load_games(graph, path='./output/', debug=False):
     with open(path + 'games.json', 'r') as f:
+    #with open(path + 'extended_games.json', 'r') as f:
 
         for game_f in f:
             try:
@@ -140,7 +143,7 @@ def load_games(graph, path='./output/', debug=False):
                     name                        = get_element(game, 'name'),
                     img_icon_url                = get_element(game, 'img_icon_url'),
                     img_logo_url                = get_element(game, 'img_logo_url'),
-                    genres                      = ['Action', 'Casual'],
+                    genres                      = get_element(game, 'genres', type='list'),
                     has_community_visible_stats = get_element(game, 'has_community_visible_stats', type='boolean')) 
                     
             except ValueError:
