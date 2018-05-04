@@ -2,18 +2,26 @@
     <head>
           <meta charset="utf-8" />
 </head>
+<body>
+
+  <select id="centrality-selector" style='position:fixed;' onchange="selectCentrality()">
+    <option value="pagerank">Pagerank</option>
+    <option value="degree_centrality">Degree</option>
+    <option value="betweenness">Closeness</option>
+    <option value="closeness">Betweenness</option>
+  </select>
 <div align='center' id="d3_selectable_force_directed_graph" style="width: 100%; height: 100%; margin: auto; margin-bottom: 12px">
     <svg />
 </div>
 
 <link rel='stylesheet' href='/static/css/graph.css'>
-<script src="https://d3js.org/d3.v4.js"></script>
+<script src="/static/js/d3.v4.js"></script>
 <script src="/static/js/graph.js"></script>
 
 <script>
     var svg = d3.select('#d3_selectable_force_directed_graph');
 
-    d3.json('node/76561197960278042', function(error, graph) {
+    d3.json('user/76561198083091304', function(error, graph) {
         if (!error) {
             createV4SelectableForceDirectedGraph(svg, graph);
         } else {
@@ -21,3 +29,12 @@
         }
     });
 </script>
+<script>
+  function selectCentrality() {
+      var x = document.getElementById("centrality-selector").value;
+      svg.selectAll('circle').transition().duration(500)
+        .attr('r', function(d){ return Math.sqrt((d[x] || 0.01)*50);});;
+  }
+</script>
+
+<body>

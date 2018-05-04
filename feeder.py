@@ -101,7 +101,7 @@ class DataSaver:
 
     def save_user_game_rels(self, relations):
         for u, g, t in relations:
-            print('{},̣{},{}'.format(u, g, t), file=self.f_user_game_rels)
+            print('{},{},{}'.format(u, g, t), file=self.f_user_game_rels)
 
 
 class SteamUser:

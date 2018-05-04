@@ -1,10 +1,13 @@
+import json
+import os
+import sys
+
+import networkx.algorithms.community.label_propagation as lp
 import networkx as nx
 import matplotlib.pyplot as plt
-import json
 import csv
 import sys
 import operator
-import networkx.algorithms.community.label_propagation as lp
 from networkx.readwrite import json_graph
 import datetime
 import pycountry
@@ -69,15 +72,15 @@ def load_users(graph, path='./output/', debug=False):
             try:
                 user_json = json.loads(user)
                 player = user_json['response']['players'][0]
-                
+
                 loccountry = get_element(player, 'loccountrycode')
-                
+
                 #Creacion de nodo
                 graph.add_node(
                     # Id
-                    player['steamid'],   
+                    player['steamid'],
                     # Tipo de nodo
-                    type            ='user',       
+                    type            ='user',
                     profileurl      = get_element(player, 'profileurl'),
                     realname        = get_element(player, 'realname'),
                     loccountrycode  = loccountry,
@@ -88,8 +91,8 @@ def load_users(graph, path='./output/', debug=False):
                     timecreated     = get_element(player, 'timecreated'),
                     lastlogoff      = get_element(player, 'lastlogoff'),
                     #Nombre de usuario
-                    name            = get_element(player, 'personaname'))   
-                    
+                    name            = get_element(player, 'personaname'))
+
             except ValueError:
                 if (debug):
                     print ('ERROR Decoding USER json failed')
@@ -112,7 +115,7 @@ def load_users(graph, path='./output/', debug=False):
 def load_user_relations(graph, path='./output/', debug=False):
     with open(path + 'user_user_rels.csv', 'r') as f:
         csv_reader = csv.reader(f, delimiter=',')
-        
+
         for relation in csv_reader:
             if (relation[0] in graph and relation[1] in graph):
                 #Incluimos relaciones de tipo is_friend entre dos usuarios
@@ -124,7 +127,7 @@ def load_user_relations(graph, path='./output/', debug=False):
                         print('WARNING: USER %s not exist' % relation[0])
                     if (not(relation[1] in graph)):
                         print('WARNING: USER %s not exist' % relation[1])
-    
+
     return graph
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -145,7 +148,7 @@ def load_games(graph, path='./output/', debug=False):
         for game_f in f:
             try:
                 game = json.loads(game_f)
-                
+
                 #Creación de nodo
                 graph.add_node(
                     #Id
@@ -157,12 +160,12 @@ def load_games(graph, path='./output/', debug=False):
                     img_icon_url                = get_element(game, 'img_icon_url'),
                     img_logo_url                = get_element(game, 'img_logo_url'),
                     genres                      = get_element(game, 'genres', type='list'),
-                    has_community_visible_stats = get_element(game, 'has_community_visible_stats', type='boolean')) 
-                    
+                    has_community_visible_stats = get_element(game, 'has_community_visible_stats', type='boolean'))
+
             except ValueError:
                 if (debug):
                     print ('ERROR Decoding GAME json failed')
-    
+
     return graph
 
 
@@ -180,7 +183,7 @@ def load_games(graph, path='./output/', debug=False):
 def load_game_relations(graph, path='./output/', debug=False):
     with open(path + 'user_game_rels.csv', 'r') as f:
         csv_reader = csv.reader(f, delimiter=',')
-        
+
         for relation in csv_reader:
             if (relation[0] in graph and relation[1] in graph):
                 #Incluimos relaciones de tipo plays entre usuario y juego
@@ -194,9 +197,9 @@ def load_game_relations(graph, path='./output/', debug=False):
                         print('WARNING: USER %s not exist' % relation[0])
                     if (not(relation[1] in graph)):
                         print('WARNING: GAME %s not exist' % relation[1])
-    
+
     return graph
-    
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Creación y carga de datos en el grafo
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -223,7 +226,7 @@ def load_graph():
     g = load_game_relations(g, debug = False)
     print("OK")
     return g
-    
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Impresión por pantalla de información relevante del grafo
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -233,7 +236,7 @@ def load_graph():
 def print_info(g):
     print("Es grafo conexo: " + str(nx.is_connected(g)))
     print(nx.info(g))
-    
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Volcado de grafo a fichero json
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -269,12 +272,12 @@ def dump_nodes_into_file(g, type, file, n):
 def dump_circles_nodes_into_file(g, type, file, n, attribute, is_list = True):
     #Escritura de subgrafo de juegos a fichero
     games = {}
-    
+
     #Recuperación de los n nodos más importantes
     top_nodes = sorted([node for node in g.nodes(data=True) if node[1]['type'] == type and 'pagerank_centrality' in node[1]],
                     # Ordenacion por atributo 'pagerank_centrality'
                     key=lambda t: t[1]['pagerank_centrality'], reverse=True)[:n]
-    
+
     #Almacenamos la información en la variable games con el genero, nombre del juego y minutos jugados
     for node in top_nodes:
         if (node[1]['type'] == type):
@@ -295,22 +298,22 @@ def dump_circles_nodes_into_file(g, type, file, n, attribute, is_list = True):
         genre_dict = {}
         genre_dict['name'] = genre
         genre_dict['children'] = []
-        
+
         for game in games[genre]:
             game_dict = {}
             game_dict['name'] = game
             game_dict['size'] = games[genre][game]
             genre_dict['children'].append(game_dict)
-        
+
         output_lst.append(genre_dict)
-    
+
     output = {}
     output['name'] = '200'
     output['children'] = output_lst
-    
+
     open(file, 'w').write(
         json.dumps(output))
-    
+
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -322,15 +325,15 @@ if __name__ == "__main__":
     print("                                                  LECTURA DE DATOS")
     print("#####################################################################################################################")
     g = load_graph()
-    
+
     print("#####################################################################################################################")
     print("                                             CARACTERÍSTICAS DEL GRAFO")
     print("#####################################################################################################################")
     print_info(g)
-    
+
     # Creación de subgrafo de usuarios (usuarios y relaciones entre usuarios)
     user_sg = g.subgraph([i for i in g.nodes() if (g.node[i]['type'] == 'user')])
-        
+
     # Creación de subgrafo a partir de los nodos que tengan aristas/uniones de tipo 'plays'. Esto incluye relaciones entre usuarios y juegos
     # De esta forma no tenemos en cuenta relaciones de usuarios con usuarios.
     games_user_sg = g.edge_subgraph([(p, g) for (p, g, data) in g.edges(data=True) if (data['type'] == 'plays')])
@@ -339,7 +342,7 @@ if __name__ == "__main__":
     print("#####################################################################################################################")
     print("                                             30 JUGADORES QUE MÁS HAN JUGADO")
     print("#####################################################################################################################")
-    
+
     # Almacenamos el grado de todos los nodos, tanto usuarios como juegos, como atributo.
     # El peso de las aristas de unión entre los usuarios y los juegos se almacena en el atributo 'played_mins'
     # y corresponde con los minutos jugados de ese usuario a ese juego.
@@ -350,24 +353,24 @@ if __name__ == "__main__":
 
     users_more_played = sorted([node for node in g.nodes(data=True) if node[1]['type'] == 'user' and 'played_total_mins' in node[1]],
         key=lambda t: t[1]['played_total_mins'], reverse=True)[:30]
-    
+
     for (user_id, info) in users_more_played:
         print("[Minutos jugados: %10d] Usuario: %s" % (info['played_total_mins'], info['name']))
-        
 
-    
+
+
     print("#####################################################################################################################")
     print("                                             30 JUGADORES QUE MÁS JUEGOS POSEEN")
     print("#####################################################################################################################")
-    
+
     # Obtenemos el grado de los usuarios y juegos, sin tener en cuenta los minutos jugados, sino simplemente los enlaces
     # entre jugador y juego. De esta forma, obtendremos para los usuarios el número de juegos que tienen y para los juegos,
     # el número de usuarios que han jugado.
     nx.set_node_attributes(g, dict(nx.degree(games_user_sg)), 'degree')
-    
+
     users_have_more_games = sorted([node for node in g.nodes(data=True) if node[1]['type'] == 'user' and 'degree' in node[1]],
         key=lambda t: t[1]['degree'], reverse=True)[:30]
-    
+
     for (user_id, info) in users_have_more_games:
         print("[Juegos: %10d] Usuario: %s" % (info['degree'], info['name']))
 
@@ -375,18 +378,18 @@ if __name__ == "__main__":
     print("#####################################################################################################################")
     print("                                               30 JUGADORES CON MÁS AMIGOS")
     print("#####################################################################################################################")
-    
-    # Obtenemos el grado de los usuarios en el subgrafo user_sg. Ese subgrafo únicamente contiene usuarios, por lo que 
+
+    # Obtenemos el grado de los usuarios en el subgrafo user_sg. Ese subgrafo únicamente contiene usuarios, por lo que
     # el número de amigos de cada usuario se corresponderá con el grado sin tener en cuenta ningún peso.
     nx.set_node_attributes(g, dict(nx.degree(user_sg)), 'friends')
-    
+
     users_friendship = sorted([node for node in g.nodes(data=True) if node[1]['type'] == 'user' and 'friends' in node[1]],
         key=lambda t: t[1]['friends'], reverse=True)[:30]
-    
+
     for (user_id, info) in users_friendship:
         print("[Amigos: %4d] Usuario: %s" % (info['friends'], info['name']))
-        
-    
+
+
     print("#####################################################################################################################")
     print("                                             30 JUGADORES MÁS IMPORTANTES")
     print("                 (teniendo en cuenta el tiempo de juego y para todas las jugadas (utilizando Pagerank))")
@@ -397,26 +400,26 @@ if __name__ == "__main__":
     print("OK")
     print("Tiempo de ejecución Pagerank: %.2f segundos" % (datetime.datetime.now() - after).total_seconds())
     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    
+
     users_sorted_pagerank = sorted([node for node in g.nodes(data=True) if node[1]['type'] == 'user' and 'pagerank_centrality' in node[1]],
         key=lambda t: t[1]['pagerank_centrality'], reverse=True)[:30]
-    
+
     for (user_id, info) in users_sorted_pagerank:
         print("[Importancia: %4f] Usuario: %s" % (info['pagerank_centrality'], info['name']))
-    
-    
+
+
     print("#####################################################################################################################")
     print("                                             30 JUEGOS MÁS IMPORTANTES")
     print("                 (teniendo en cuenta el tiempo de juego y para todas las jugadas (utilizando Pagerank))")
     print("#####################################################################################################################")
-        
+
     games_sorted_pagerank = sorted([node for node in g.nodes(data=True) if node[1]['type'] == 'game' and 'pagerank_centrality' in node[1]],
         key=lambda t: t[1]['pagerank_centrality'], reverse=True)[:30]
-    
+
     for (user_id, info) in games_sorted_pagerank:
         print("[Importancia: %4f] Juego: %s" % (info['pagerank_centrality'], info['name']))
-    
-    
+
+
     print("#####################################################################################################################")
     print("                                             30 JUGADORES MÁS IMPORTANTES")
     print("                 (teniendo en cuenta el tiempo de juego y para jugadas > 5 minutos (utilizando Pagerank))")
@@ -427,31 +430,31 @@ if __name__ == "__main__":
     games_user_filtered_sg = g.edge_subgraph([(p, g) for (p, g, data) in g.edges(data=True) if (data['type'] == 'plays'and data['played_mins'] > bottom_limit)])
 
     special_print("Ejecutando Pagerank. Por favor, espere...", print_ln=False)
-    after = datetime.datetime.now()    
+    after = datetime.datetime.now()
     # Almacenamos dicha centralidad en el atributo pagerank_filtered_centrality
     nx.set_node_attributes(g, dict(nx.pagerank(games_user_filtered_sg, weight = 'played_mins')), 'pagerank_filtered_centrality')
     print("OK")
     print("Tiempo de ejecución Pagerank: %.2f segundos" % (datetime.datetime.now() - after).total_seconds())
     print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-    
+
     users_sorted_filtered_pagerank = sorted([node for node in g.nodes(data=True) if node[1]['type'] == 'user' and 'pagerank_filtered_centrality' in node[1]],
         key=lambda t: t[1]['pagerank_filtered_centrality'], reverse=True)[:30]
-    
+
     for (user_id, info) in users_sorted_filtered_pagerank:
         print("[Importancia: %4f] Usuario: %s" % (info['pagerank_filtered_centrality'], info['name']))
-    
-    
+
+
     print("#####################################################################################################################")
     print("                                             30 JUEGOS MÁS IMPORTANTES")
     print("                 (teniendo en cuenta el tiempo de juego y para jugadas > 5 minutos (utilizando Pagerank))")
     print("#####################################################################################################################")
-        
+
     games_sorted_filtered_pagerank = sorted([node for node in g.nodes(data=True) if node[1]['type'] == 'game' and 'pagerank_filtered_centrality' in node[1]],
         key=lambda t: t[1]['pagerank_filtered_centrality'], reverse=True)[:30]
-    
+
     for (user_id, info) in games_sorted_filtered_pagerank:
         print("[Importancia: %4f] Juego: %s" % (info['pagerank_filtered_centrality'], info['name']))
-    
+
 
     print("#####################################################################################################################")
     print("                SUBGRAFOS CON 1.000 USUARIOS QUE MÁS HAN JUGADO Y 1.000 USUARIOS QUE MENOS HAN JUGADO")
@@ -461,113 +464,31 @@ if __name__ == "__main__":
     # almacenado anteriormente el tiempo (en minutos) que han jugado
     top_users = sorted([node for node in g.nodes(data=True) if node[1]['type'] == 'user' and 'played_total_mins' in node[1]],
         key=lambda t: t[1]['played_total_mins'], reverse=True)[:1000]
-        
-        
+
+
     # Obtenemos los 1000 usuarios que menos han jugado de toda la red. En el atributo 'played_total_mins' de los usuarios (type == 'user') hemos
     # almacenado anteriormente el tiempo (en minutos) que han jugado. Eliminamos los que no hayan jugado ni siquiera 1 minuto
     bottom_users = sorted([node for node in g.nodes(data=True) if node[1]['type'] == 'user' and 'played_total_mins' in node[1] and (node[1]['played_total_mins'] > 0)],
         key=lambda t: t[1]['played_total_mins'], reverse=False)[:1000]
-    
+
     # Generamos los subgrafos a partir de las aristas de tipo plays que salgan o entren de los usuarios y cuyo tipo sea plays
     # De esta forma el subgrafo contendrá los 1000 usuarios que más han jugado y los juegos a los que han jugado.
     top_users_sg = g.edge_subgraph([(a, b) for (a, b, data) in g.edges([user_id for (user_id, attrs) in top_users], data=True) if (data['type'] == 'plays')])
     # El subgrafo contendrá los 1000 usuarios que menos han jugado y los juegos a los que han jugado.
     bottom_users_sg = g.edge_subgraph([(a, b) for (a, b, data) in g.edges([user_id for (user_id, attrs) in bottom_users], data=True) if (data['type'] == 'plays')])
 
+    output_dir = "./server/static/data"
 
-    
     print("#####################################################################################################################")
     print("                                 VOLCADO DE INFORMACIÓN A FICHEROS PARA SU VISUALIZACION")
     print("#####################################################################################################################")
     special_print("Volcando 200 juegos más importantes.....", print_ln=False)
-    dump_nodes_into_file(g, 'game', 'visualizacion/200_main_games.json', 200)
-    dump_circles_nodes_into_file(g, 'game', 'visualizacion/200_main_games_bubble_zoom.json', 200, 'genres')
+    dump_circles_nodes_into_file(g, 'game', os.path.join(output_dir, '200_main_games_bubble_zoom.json'), 200, 'genres')
     print("OK")
     special_print("Volcando 200 usuarios más importantes...", print_ln=False)
-    dump_nodes_into_file(g, 'user', 'visualizacion/200_main_users.json', 200)
-    dump_circles_nodes_into_file(g, 'user', 'visualizacion/200_main_users_bubble_zoom.json', 200, 'country', is_list = False)
+    dump_circles_nodes_into_file(g, 'user', os.path.join(output_dir, '200_main_users_bubble_zoom.json'), 200, 'country', is_list = False)
     print("OK")
-    
-       
-    
-    #############################################################################################################
-    ###CONTINUARA.....
-    #############################################################################################################
-    
-
-#    label_propagation = lp.label_propagation_communities(g)
-#    
-#    
-#    label_propagation_async = lp.asyn_lpa_communities(games_user_sg, weight = 'played_mins')
-#
-#
-#    for (orig, dest, attrs) in g.edges(data=True):
-#        if (attrs['type'] == 'plays'): 
-#            if (g.edge[orig]['type'] == 'user'):
-#                g.node[orig]['played_normalized_mins'] = (if ('played_mins' in g.node[orig]) g.node[orig]['played_mins'] else 0)
-#            elif (g.node[dest]['type'] == 'user'):
-#                g.node[dest]['played_normalized_mins'] = g.node[dest]['played_mins']
-
-
-    
-    
-
-    
-
-
-    
-    
-#    import networkx as nx
-#    from networkx.algorithms import community
-#
-#    communities_generator = community.girvan_newman(g)
-#    top_level_communities = next(communities_generator)
-#    next_level_communities = next(communities_generator)
-#    sorted(map(sorted, next_level_communities))
-#
-#
-#
-#
-#    import networkx as nx                                                                                          
-#    from networkx.algorithms import community                                     
-#                                                                                                
-#    communities_generator = community.girvan_newman(g)
-#    top_level_communities = next(communities_generator)
-#    next_level_communities = next(communities_generator)
-#    sorted(map(sorted, next_level_communities)) 
-#
-#
-#
-#
-#    def heaviest(graph):
-#        #Seteamos todos los pesos None a 0
-#        edges = [(a,b,0) if c is None else (a,b,c) for (a,b,c) in graph.edges(data='played_mins')]
-#        u, v, w = max(edges, key=operator.itemgetter(2))
-#        return (u, v)
-#
-#    comp = community.girvan_newman(g, most_valuable_edge = heaviest)
-#    tuple(sorted(c) for c in next(comp))
-
-        
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    special_print("Exportando el grafo como JSON", print_ln=False)
+    with open(os.path.join(output_dir, 'graph.json'), 'w') as f_:
+        f_.write(json.dumps(nx.node_link_data(g)))
+    print("OK")
