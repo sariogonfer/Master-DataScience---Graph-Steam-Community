@@ -456,27 +456,6 @@ if __name__ == "__main__":
         print("[Importancia: %4f] Juego: %s" % (info['pagerank_filtered_centrality'], info['name']))
 
 
-    print("#####################################################################################################################")
-    print("                SUBGRAFOS CON 1.000 USUARIOS QUE MÁS HAN JUGADO Y 1.000 USUARIOS QUE MENOS HAN JUGADO")
-    print("#####################################################################################################################")
-
-    # Obtenemos los 1000 usuarios que más han jugado de toda la red. En el atributo 'played_total_mins' de los usuarios (type == 'user') hemos
-    # almacenado anteriormente el tiempo (en minutos) que han jugado
-    top_users = sorted([node for node in g.nodes(data=True) if node[1]['type'] == 'user' and 'played_total_mins' in node[1]],
-        key=lambda t: t[1]['played_total_mins'], reverse=True)[:1000]
-
-
-    # Obtenemos los 1000 usuarios que menos han jugado de toda la red. En el atributo 'played_total_mins' de los usuarios (type == 'user') hemos
-    # almacenado anteriormente el tiempo (en minutos) que han jugado. Eliminamos los que no hayan jugado ni siquiera 1 minuto
-    bottom_users = sorted([node for node in g.nodes(data=True) if node[1]['type'] == 'user' and 'played_total_mins' in node[1] and (node[1]['played_total_mins'] > 0)],
-        key=lambda t: t[1]['played_total_mins'], reverse=False)[:1000]
-
-    # Generamos los subgrafos a partir de las aristas de tipo plays que salgan o entren de los usuarios y cuyo tipo sea plays
-    # De esta forma el subgrafo contendrá los 1000 usuarios que más han jugado y los juegos a los que han jugado.
-    top_users_sg = g.edge_subgraph([(a, b) for (a, b, data) in g.edges([user_id for (user_id, attrs) in top_users], data=True) if (data['type'] == 'plays')])
-    # El subgrafo contendrá los 1000 usuarios que menos han jugado y los juegos a los que han jugado.
-    bottom_users_sg = g.edge_subgraph([(a, b) for (a, b, data) in g.edges([user_id for (user_id, attrs) in bottom_users], data=True) if (data['type'] == 'plays')])
-
     static_pages_dir = "./StaticPages"
     server_data_dir = "./InteractiveServer/static/data"
 
@@ -489,7 +468,8 @@ if __name__ == "__main__":
     special_print("Volcando 200 usuarios más importantes...", print_ln=False)
     dump_circles_nodes_into_file(g, 'user', os.path.join(static_pages_dir, '200_main_users_bubble_zoom.json'), 200, 'country', is_list = False)
     print("OK")
-    special_print("Exportando el grafo como JSON", print_ln=False)
+    os.makedirs(server_data_dir, exist_ok=True)
+    special_print("Exportando el grafo como JSON...........", print_ln=False)
     with open(os.path.join(server_data_dir, 'graph.json'), 'w') as f_:
         f_.write(json.dumps(nx.node_link_data(g)))
     print("OK")
