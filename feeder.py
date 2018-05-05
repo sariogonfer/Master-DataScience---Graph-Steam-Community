@@ -22,6 +22,9 @@ OWNED_GAMES = lambda steamid: ("{}/IPlayerService/GetOwnedGames/v0001/?key={}"
                                "&steamid={}&include_appinfo=1"
                                "&include_played_free_games=1".format(
                                    SERVER_ENDPOINT, API_KEY, steamid))
+APP_ENDPOINT = lambda appid: ('https://store.steampowered.com/api/appdetails/'
+                              '?appids={}'.format(appid))
+
 PROCESSED_STEAMIDS = set()
 PROCESSED_GAMEIDS = set()
 STEAMID_QUEUE = Queue(maxsize=1000)
@@ -33,15 +36,26 @@ def get_summary(steamids):
 
     return response.json()
 
+
 def get_friends(steamid):
     response = requests.get(FRIENDS_ENDPOINT(steamid))
 
     return response.json()
 
+
 def get_owned_games(steamid):
     response = requests.get(OWNED_GAMES(steamid))
 
     return response.json()
+
+
+def get_extended_info(steamid):
+    while True:
+        response = requests.get(APP_ENDPOINT(steamid))
+
+        if response.json():
+            return response.json()
+
 
 class DataSaver:
     path = None
@@ -56,18 +70,21 @@ class DataSaver:
         self.path = path
 
     def __enter__(self):
-        self.f_users= open(os.path.join(self.path, 'user.json'), 'w')
+        self.f_users = open(os.path.join(self.path, 'user.json'), 'w')
         self.f_games = open(os.path.join(self.path, 'games.json'), 'w')
-        self.f_user_user_rels = open(os.path.join(self.path,
-                                     'user_user_rels.csv'), 'w')
-        self.f_user_game_rels = open(os.path.join(self.path,
-                                     'user_game_rels.csv'), 'w')
+        self.f_ext_games = open(os.path.join(self.path, 'extended_games.json'),
+                                'w')
+        self.f_user_user_rels = open(os.path.join(
+            self.path, 'user_user_rels.csv'), 'w')
+        self.f_user_game_rels = open(os.path.join(
+            self.path, 'user_game_rels.csv'), 'w')
 
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.f_users.close()
         self.f_games.close()
+        self.f_ext_games.close()
         self.f_user_user_rels.close()
         self.f_user_game_rels.close()
         self.save_processed_queues()
@@ -75,7 +92,7 @@ class DataSaver:
 
     def save_pending_queue(self):
         with open(os.path.join(self.path, 'pendding.csv'), 'w') as f_queue:
-            while not  STEAMID_QUEUE.empty():
+            while not STEAMID_QUEUE.empty():
                 print(STEAMID_QUEUE.get(), file=f_queue)
 
     def save_processed_queues(self):
@@ -90,6 +107,9 @@ class DataSaver:
 
     def save_user(self, data):
         print(data, file=self.f_users)
+
+    def save_ext_game(self, data):
+        print(data, file=self.f_ext_games)
 
     def save_games(self, data):
         for g in data:
@@ -109,6 +129,7 @@ class SteamUser:
     _summary = None
     _friends = None
     _owned_games = None
+
     def __init__(self, steamid):
         self._steamid = steamid
 
@@ -137,16 +158,16 @@ class SteamUser:
 
     @property
     def owned_games_ids(self):
-        return [g['appid'] for g in self.owned_games['response'] \
+        return [g['appid'] for g in self.owned_games['response']
                 .get('games', [])]
 
     @property
     def owned_games_playtime(self):
-        return [(g['appid'], g['playtime_forever']) for g in \
+        return [(g['appid'], g['playtime_forever']) for g in
                 self.owned_games['response'].get('games', [])]
 
     def get_friend_rels(self, exclude=[]):
-        for friend_id in [f for f in self.friend_ids if not f in exclude]:
+        for friend_id in [f for f in self.friend_ids if f not in exclude]:
             yield self._steamid, friend_id
 
     def get_game_rels(self):
@@ -154,8 +175,12 @@ class SteamUser:
             yield self._steamid, game[0], game[1]
 
     def get_owned_games_info(self, exclude=[]):
-        return [g for g in self.owned_games['response'].get('games', []) \
+        return [g for g in self.owned_games['response'].get('games', [])
                 if not g['appid'] in exclude]
+
+
+def get_extended_games(app_ids):
+    return [get_extended_info(i) for i in app_ids]
 
 
 def process_steamid(steamid, saver):
@@ -164,6 +189,8 @@ def process_steamid(steamid, saver):
     saver.save_user_user_rels(yo.get_friend_rels(PROCESSED_STEAMIDS))
     saver.save_user_game_rels(yo.get_game_rels())
     saver.save_games(yo.get_owned_games_info(exclude=PROCESSED_GAMEIDS))
+    saver.save_ext_game(get_extended_games([i for i in yo.owned_games_ids
+                                            if i not in PROCESSED_GAMEIDS]))
     PROCESSED_GAMEIDS.update(yo.owned_games_ids)
     PROCESSED_STEAMIDS.add(steamid)
 
@@ -190,8 +217,8 @@ def harvest_info(seed_steamid):
                 if steamid in PROCESSED_STEAMIDS:
                     continue
                 friend_ids = process_steamid(steamid, saver)
-                for si in [id_ for id_ in friend_ids \
-                           if not id_ in PROCESSED_STEAMIDS]:
+                for si in [id_ for id_ in friend_ids
+                           if id_ not in PROCESSED_STEAMIDS]:
                     try:
                         STEAMID_QUEUE.put(si, block=False)
                     except Full:
@@ -200,6 +227,7 @@ def harvest_info(seed_steamid):
             except Exception as e:
                 print(e)
                 print('Failed. ID: {}'.format(steamid))
+
 
 if __name__ == "__main__":
     harvest_info(SEED_STEAMID)
