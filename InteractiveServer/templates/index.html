@@ -2,7 +2,7 @@
 <html class="ocks-org do-not-copy">
 <meta charset="utf-8">
 <head>
-<title>Zoomable Treemaps</title>
+<title>Steam Commmunity</title>
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
   <link rel="stylesheet" href="/static/css/directed.force.css">
@@ -37,39 +37,79 @@
 
 <div class="reveal">
   <div class="slides">
-    <section>
-      <h2>Panel de géneros.</h2>
-      <p>
-        Este panel muestra la distribución de los diferentes generos según el tiempo jugado.
-        Al hacer click sobre un genero, se muestran los 20 juegos más populares.
-        Al pasar el raton sobre un juego, se muestra el total de minutos jugados.
-        Al hacer click sobre un juego, se muestra información sobre él.
-      </p>
+      <section>
+        <section>
+          <h2>Panel de géneros.</h2>
+          <p>
+            Este panel muestra la distribución de los diferentes generos según el tiempo jugado.
+            Al hacer click sobre un genero, se muestran los 20 juegos más populares.
+            Al pasar el raton sobre un juego, se muestra el total de minutos jugados.
+            Al hacer click sobre un juego, se muestra información sobre él.
+          </p>
+          <p>
+            El icono de Steam engloba la suma del resto de juegos.
+          </p>
+        </section>
+
+        <section>
+            <div id="chart"></div>
+            <div id="info"></div>
+        </section>
+
+        <section>
+          <ul>
+            <li>Se puede observar que en los generos más importantes (acción, estrategia o free to play),
+              existen juegos que a la vez son muy importantes, llegando a tener más minutos jugados que la suma de otros generos.</li>
+            <li>Este efecto, el de tener juegos que acumulan gran proporción de los minutos jugados dentro del género, no ocurre de manera tan
+              bruta en los géneros "menos" importantes como simulación o RPG.</li>
+          </ul>
+        </section>
     </section>
 
     <section>
-        <div id="chart"></div>
-        <div id="info"></div>
-    </section>
+      <section>
+        <h2>Grafo de usuarios amigos de mis amigos.</h2>
+        <p>
+          Este grafo muestra los amigos de los amigos de un usuario.
+        </p>
+      </section>
 
-    <section>
-      <h2>Grafo de usuarios amigos de mis amigos.</h2>
-      <p>
-        Este grafo muestra los amigos de los amigos de un usuario.
-        Al hacer click sobre un nodo, realiza los cálculos al vuelo, así que puede tardar unos segundos en cargar los datos. Be Patient.
-      </p>
-    </section>
+      <section>
+        <ul>
+          <li>Al pulsar sobre la cabecera, se despliega una lista de centralidades. El tamaño del nodo varía en función a este índice.</li>
+          <li>Al pasar el ratón sobre un nodo, se muestra en la esquina inferior izquierda el nombre de usuario de este nodo,
+            y el valor asociado de distintas centralidades, normalizado de 0 a 1</li>
+          <li>Al pulsar sobre un nodo, cambia el subgrafo mostrado al subgrafo de los amigos, y amigos de los amigos de este usuario. Las centralidades se recalculan para este nuevo subgrafo.</li>
+        </ul>
+      </section>
 
-    <section>
-      <select id="centrality-selector" style='' onchange="selectCentrality()">
-        <option value="pagerank">Pagerank</option>
-        <option value="degree_centrality">Degree</option>
-        <option value="betweenness">Closeness</option>
-        <option value="closeness">Betweenness</option>
-      </select>
-      <div align='center' class="graph-container" id="forceDirectedGraph">
-          <svg id="svgDirectedForce"/>
-      </div>
+      <section>
+        <select id="centrality-selector" style='' onchange="selectCentrality()">
+          <option value="pagerank">Pagerank</option>
+          <option value="degree_centrality">Degree</option>
+          <option value="betweenness">Closeness</option>
+          <option value="closeness">Betweenness</option>
+        </select>
+        <div align='center' class="graph-container" id="forceDirectedGraph">
+            <svg id="svgDirectedForce"/>
+        </div>
+      </section>
+
+      <section>
+        <ul>
+          <li>Se aprecia como ciertos usuarios (juarry por ejemplo) son importantes en prácticamente todos los subgrafos.
+            Esto demuestra que son usuarios muy importantes dentro de nuestros datos.</li>
+          <li>Aún generando el subgrafo a partir de un usuario, esto no asegura que este usuario sea el más importante de este subgrafo.</li>
+        </ul>
+      </section>
+
+      <section>
+        <ul>
+          <li>La detección de comunidades no ha mostrado nada interesante al aplicarla sobre usuarios (tanto en los subgrafos como en el grafo de usuarios completo).
+            Incluir los juegos lo hacía computacionalmente inviable. Con más tiempo, se podría haber estudiado ejecutar esta detección en la nube.</li>
+          <li>Aunque la detección de comunidades no muestra nada interesante, si se observa que al dibujar los usarios, estos tienden a agruparse.</li>
+        </ul>
+      </section>
     </section>
   </div>
 </div>
@@ -77,6 +117,19 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
 
+    </div>
+  </div>
+</div>
+<div class="modal fade" id="loading-modal" role="dialog">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title">Loading...</h4>
+      </div>
+      <div class="modal-body">
+        <p>Calculando el subgrafo.</p>
+      </div>
+      </div>
     </div>
   </div>
 </div>
@@ -96,7 +149,7 @@
 
     d3.json('user/76561198083091304', function(error, graph) {
         if (!error) {
-            createV4SelectableForceDirectedGraph(svgDirectedForce, graph);
+            createV4SelectableForceDirectedGraph(svgDirectedForce, graph, '76561198083091304');
         } else {
             console.error(error);
         }
@@ -106,7 +159,7 @@
   function selectCentrality() {
       var x = document.getElementById("centrality-selector").value;
       svgDirectedForce.selectAll('circle').transition().duration(500)
-        .attr('r', function(d){ return Math.sqrt((d[x] || 0.01) * 50 );});;
+        .attr('r', function(d){ return Math.sqrt((d[x] || 0.01) * 50 )});
   }
 </script>
 <script>

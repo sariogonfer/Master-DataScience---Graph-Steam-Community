@@ -4,7 +4,7 @@ function removeDuplicates(myArr, prop) {
     });
 }
 
-function createV4SelectableForceDirectedGraph(svgDirectedForce, graph) {
+function createV4SelectableForceDirectedGraph(svgDirectedForce, graph, selectedId) {
   var width = 960,
   height = 600;
 
@@ -89,18 +89,18 @@ function createV4SelectableForceDirectedGraph(svgDirectedForce, graph) {
     .data(graph.nodes)
     .enter().append("circle")
     .attr("r", function(d) {
-      return d.degree_centrality * 20;
+      var x = document.getElementById("centrality-selector").value;
+      return Math.sqrt((d[x] || 0.01) * 50 );
     })
-    .attr("fill", function(d) {
-      if (d.type == 'game')
-        return 'red';
-      else
-        return 'blue';
+    .attr("class", function(d) {
+      return d.id == selectedId ? 'ego' : '';
     })
     .on('click', function (d) {
+      $("#loading-modal").modal("show");
       d3v4.json('user/' + d.id, function(error, graph) {
+          $("#loading-modal").modal("hide");
           if (!error) {
-              createV4SelectableForceDirectedGraph(svgDirectedForce, graph);
+              createV4SelectableForceDirectedGraph(svgDirectedForce, graph, d.id);
           } else {
               console.error(error);
           }
@@ -109,9 +109,9 @@ function createV4SelectableForceDirectedGraph(svgDirectedForce, graph) {
     .on("mouseover", function(d) {
       svgDirectedForce.select("#infoPlayerName").text(d.name);
       svgDirectedForce.select("#infoPlayerPagerank").text("Pagerank: " + d.pagerank);
-      svgDirectedForce.select("#infoPlayerDegree").text("Pagerank: " + d.degree_centrality);
-      svgDirectedForce.select("#infoPlayerCloseness").text("Pagerank: " + d.betweenness);
-      svgDirectedForce.select("#infoPlayerBetweennes").text("Pagerank: " + d.closeness);
+      svgDirectedForce.select("#infoPlayerDegree").text("Degree-Centrality: " + d.degree_centrality);
+      svgDirectedForce.select("#infoPlayerCloseness").text("Closeness: " + d.betweenness);
+      svgDirectedForce.select("#infoPlayerBetweennes").text("Betweennes: " + d.closeness);
     })
     .call(d3v4.drag()
       .on("start", dragstarted)
